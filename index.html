@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0620">
 <meta name="description" content="Kaydır, kurala uyan kapıyı seç. Beynini çalıştıran hızlı bir oyun.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
   html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none}
@@ -20,7 +23,7 @@
   #hearts{font-size:22px;letter-spacing:3px;min-width:90px}
   #score{font-size:30px;font-weight:900;text-align:center}
   #streak{min-width:90px;text-align:right;font-size:15px;font-weight:800;color:#ffd36b}
-  #snd{pointer-events:auto;position:fixed;right:10px;bottom:10px;background:none;border:0;color:#fff;font-size:20px;opacity:.7}
+  #pauseBtn{pointer-events:auto;position:fixed;left:12px;bottom:max(env(safe-area-inset-bottom),12px);display:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;font:inherit;font-weight:800;font-size:14px;letter-spacing:2px;padding:11px 18px}
   #banner{margin:8px auto 0;max-width:460px;text-align:center;padding:8px 12px 7px;border-radius:16px;background:rgba(255,255,255,.1);border:2px solid var(--ac,#fff);
     box-shadow:0 0 24px var(--ac,#fff);transition:box-shadow .2s}
   #banner b{display:block;font-size:clamp(22px,7vw,34px);font-weight:900;letter-spacing:2px;color:var(--ac,#fff);text-shadow:0 0 12px var(--ac,#fff);line-height:1.1}
@@ -30,9 +33,36 @@
   .screen{position:fixed;inset:0;background:rgba(8,5,26,.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px}
   .screen h1{margin:0;font-size:38px;font-weight:900;letter-spacing:3px;background:linear-gradient(#fff,#ff6bd6);-webkit-background-clip:text;background-clip:text;color:transparent}
   .screen p{margin:0;max-width:340px;font-size:15px;line-height:1.5;opacity:.88}
-  .screen button{font:inherit;font-weight:800;font-size:18px;letter-spacing:2px;color:#1a0f3d;background:linear-gradient(#ffe08a,#ffb347);border:0;border-radius:999px;padding:13px 0;width:230px;margin-top:4px}
-  .screen button.alt{background:linear-gradient(#b7a8ff,#7c3aed);color:#fff}
-  .screen button.alt2{background:linear-gradient(#ff8fa3,#e0245e);color:#fff}
+  .screen > button{font:inherit;font-weight:800;font-size:18px;letter-spacing:2px;color:#1a0f3d;background:linear-gradient(#ffe08a,#ffb347);border:0;border-radius:999px;padding:13px 0;width:230px;margin-top:4px}
+  .screen > button.alt{background:linear-gradient(#b7a8ff,#7c3aed);color:#fff}
+  .screen > button.alt2{background:linear-gradient(#ff8fa3,#e0245e);color:#fff}
+  .screen > button.alt3{background:linear-gradient(#8af0c0,#18a56a);color:#06281a}
+  #splash{background:radial-gradient(ellipse at 50% 30%,#3a1670,#0a0620 70%);gap:6px;cursor:pointer}
+  #logo{width:min(46vw,200px);aspect-ratio:1;border-radius:22%;overflow:hidden;box-shadow:0 0 50px rgba(110,225,255,.45),0 12px 40px rgba(0,0,0,.6);animation:logoIn .9s cubic-bezier(.2,1.4,.4,1) both}
+  #logo svg{width:100%;height:100%;display:block}
+  @keyframes logoIn{0%{transform:translateY(-60px) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+  #splash h1{margin-top:18px;font-size:clamp(30px,9vw,42px);animation:fadeUp .8s .5s both}
+  #splash p{animation:fadeUp .8s .8s both}
+  #tapTxt{margin-top:34px;font-size:14px;font-weight:800;letter-spacing:4px;animation:fadeUp .6s 1.3s both,blink 1.4s 1.9s infinite}
+  @keyframes fadeUp{0%{transform:translateY(16px);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes blink{50%{opacity:.25}}
+  #count{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font-size:clamp(70px,24vw,130px);font-weight:900;font-style:italic;pointer-events:none;color:#fff;text-shadow:0 0 30px #ff6bd6,0 0 60px #7c3aed}
+  #count.pop{animation:cpop .65s ease-out}
+  @keyframes cpop{0%{transform:scale(2.2);opacity:0}30%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.85}}
+  .screen > button.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)}
+  #settings{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding-top:max(env(safe-area-inset-top),22px);padding-bottom:40px;gap:0}
+  #settings h1{margin-bottom:6px}
+  #setBody{width:100%;max-width:380px}
+  .hd{text-align:left;font-size:12px;letter-spacing:3px;opacity:.7;margin:18px 0 4px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;font-size:16px}
+  .row.col{flex-direction:column;align-items:flex-start;gap:9px}
+  .sw{width:56px;height:32px;border-radius:999px;background:#3a3358;border:0;padding:0;position:relative;flex:none;transition:background .2s}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .2s}
+  .sw.on{background:#3ddc84}.sw.on::after{transform:translateX(24px)}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{font:inherit;font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:9px 12px}
+  .seg button.on{background:linear-gradient(#ffe08a,#ffb347);color:#1a0f3d;border-color:transparent}
+  .note{font-size:12px;opacity:.65;line-height:1.5;text-align:left;margin-top:12px}
 </style>
 </head>
 <body>
@@ -41,19 +71,41 @@
   <div id="row1"><div><div id="hearts">❤❤❤</div><div id="wx" style="font-size:12px;opacity:.9;letter-spacing:1px;margin-top:2px"></div></div><div id="score">0</div><div id="streak"></div></div>
   <div id="banner"><b id="bt">HAZIR OL</b><span id="bs">&nbsp;</span></div>
 </div>
-<button id="snd">🔊</button>
+<button id="pauseBtn">⏸ MENÜ</button>
 
-<div class="screen" id="start" style="display:flex">
+<div class="screen" id="splash" style="display:flex">
+  <div id="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1670"/><stop offset="1" stop-color="#080418"/></linearGradient><filter id="gl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter></defs><rect width="100" height="100" fill="url(#bg)"/><polygon points="35.35,18.6 64.65,18.6 120.3,100 -20.3,100" fill="#341e78"/><g stroke="#5ac8ff" stroke-width="1.6" filter="url(#gl)"><line x1="35.35" y1="18.6" x2="-20.3" y2="100"/><line x1="64.65" y1="18.6" x2="120.3" y2="100"/></g><g stroke="#5ac8ff" stroke-width="1.1"><line x1="35.35" y1="18.6" x2="-20.3" y2="100"/><line x1="64.65" y1="18.6" x2="120.3" y2="100"/></g><g stroke="#fff" stroke-linecap="round" stroke-dasharray="4.6 4.7" stroke-width="0.9"><line x1="45.1" y1="24" x2="29" y2="100"/><line x1="54.9" y1="24" x2="71" y2="100"/></g><g fill="#281c60" stroke="#8278c8" stroke-width="0.5"><rect x="26" y="28" width="11.2" height="9" rx="2.2"/><rect x="44.4" y="28" width="11.2" height="9" rx="2.2"/><rect x="62.8" y="28" width="11.2" height="9" rx="2.2"/></g><g fill="#281c60" stroke="#968cd7" stroke-width="0.6"><rect x="15.4" y="43.6" width="19.1" height="15.3" rx="3.8"/><rect x="65.5" y="43.6" width="19.1" height="15.3" rx="3.8"/></g><rect x="39" y="43" width="22" height="17.6" rx="4.4" fill="#ffbe28" filter="url(#gl)"/><rect x="39" y="43" width="22" height="17.6" rx="4.4" fill="#ffc846" stroke="#fff5c8" stroke-width="0.7"/><polyline points="45.6,52.2 49.2,55.6 55.6,48.6" fill="none" stroke="#3c1c6e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="85.9" r="11" fill="#6ee1ff" filter="url(#gl)"/><circle cx="50" cy="85.9" r="6.1" fill="#fff"/><ellipse cx="47.6" cy="83.7" rx="1.7" ry="1.7" fill="#c8f0ff"/></svg></div>
+  <h1>KURAL KOŞUSU</h1>
+  <p>Kuralı oku. Doğru kapıyı seç.</p>
+  <div id="tapTxt">BAŞLAMAK İÇİN DOKUN</div>
+</div>
+<div id="count"></div>
+<div class="screen" id="start">
   <h1>KURAL KOŞUSU</h1>
   <p>Üstteki <b>kurala</b> uyan kapıya doğru <b>kaydır</b> (veya ekranın sol/sağ yanına dokun).<br>Kural birkaç kapıda bir <b>değişir</b>, dikkat!</p>
   <button data-m="0">RAHAT</button>
   <button class="alt" data-m="1">NORMAL</button>
   <button class="alt2" data-m="2">ZORLU</button>
+  <button class="alt3" data-m="3">ÖZEL</button>
+  <button class="ghost" id="openSet">⚙ AYARLAR</button>
+  <p style="font-size:12px;opacity:.65">Rahat: yavaş, 5 can · Zorlu: hızlı · Özel: hızı, havayı ve canı ayarlardan sen seç</p>
 </div>
 <div class="screen" id="over">
   <h1>BİTTİ!</h1>
   <p id="overTxt"></p>
-  <button id="again">TEKRAR</button>
+  <button id="again">TEKRAR OYNA</button>
+  <button class="alt" id="toMenu">MENÜ</button>
+</div>
+<div class="screen" id="pause">
+  <h1>DURAKLADI</h1>
+  <button id="resume">DEVAM ET</button>
+  <button class="alt" id="pSet">⚙ AYARLAR</button>
+  <button class="alt2" id="quit">OYUNDAN ÇIK</button>
+</div>
+<div class="screen" id="settings">
+  <h1>AYARLAR</h1>
+  <div id="setBody"></div>
+  <button id="setBack" style="margin-top:22px">GERİ</button>
 </div>
 
 <script>
@@ -116,12 +168,16 @@ const GEN={
     return shuffle([a,trap,b]);
   }
 };
+let ENABLED=null; // null = hepsi açık, yoksa Set
 function newRule(prevType,n){
-  const easy=['big','small','even','odd','shape','color'];
-  let pool=easy.slice();
-  if(n>=10)pool.push('eq','eq');
-  if(n>=18)pool.push('stroop','stroop','eq');
-  pool=pool.filter(t=>t!==prevType);
+  const on=t=>!ENABLED||ENABLED.has(t);
+  let pool=['big','small','even','odd','shape','color'].filter(on);
+  const early=pool.length===0;                       // kolay tür yoksa zor türler hemen başlasın
+  if(on('eq')&&(n>=10||early))pool.push('eq','eq');
+  if(on('stroop')&&(n>=18||early))pool.push('stroop','stroop');
+  if(on('eq')&&n>=18)pool.push('eq');
+  if(!pool.length)pool=['big'];
+  const p2=pool.filter(t=>t!==prevType);if(p2.length)pool=p2;
   const type=pick(pool),r={type,param:null,label:'',sub:'',accent:'#ffffff'};
   if(type==='big'){r.label='EN BÜYÜK';r.sub='en büyük sayıyı seç';r.accent='#ffd23f'}
   if(type==='small'){r.label='EN KÜÇÜK';r.sub='en küçük sayıyı seç';r.accent='#3ddc84'}
@@ -145,10 +201,37 @@ function worldFor(n){const idx=Math.floor(n/22);return idx===0?0:[1,2,3,4][(idx-
 // ============ GÖRÜNÜM / OYUN ============
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let W=0,H=0,dpr=1,HOR=0,PL=0,RB=0;
-const MODES=[{name:'RAHAT',speed:.62,pw:.6},{name:'NORMAL',speed:.85,pw:1},{name:'ZORLU',speed:1.15,pw:1.2}];
+const MODES=[{name:'RAHAT',speed:.62,pw:.6,lives:5},{name:'NORMAL',speed:.85,pw:1,lives:3},{name:'ZORLU',speed:1.15,pw:1.2,lives:3}];
 let mode=MODES[1],state='menu';
 let rows,lane,px,lives,score,streak,bestStreak,rowsSpawned,rowsDone,rowsOk,rule,periodLeft,prevType,time,shake,flash,flashCol,parts,popups,lastBannerRule;
-let sound=true;try{sound=localStorage.getItem('kuralSnd')!=='0'}catch(e){}
+let sound=true,maxLives=3,lastMode=1,setFrom='start';
+const GROUPS=[
+  {k:'sayi',label:'Sayı karşılaştırma (en büyük / en küçük)',types:['big','small']},
+  {k:'tekcift',label:'Tek / çift sayı',types:['even','odd']},
+  {k:'renk',label:'Renk',types:['color']},
+  {k:'sekil',label:'Şekil',types:['shape']},
+  {k:'islem',label:'İşlem (toplama, çıkarma, çarpma)',types:['eq']},
+  {k:'stroop',label:'Boya – kelime (zor)',types:['stroop']},
+];
+const SPEEDS=[{l:'Çok yavaş',v:.5},{l:'Yavaş',v:.62},{l:'Normal',v:.85},{l:'Hızlı',v:1.15},{l:'Çok hızlı',v:1.4}];
+const WEATHERS=[{l:'Kapalı',pw:0},{l:'Hafif',pw:.6},{l:'Normal',pw:1},{l:'Sert',pw:1.3}];
+const LIVES=[1,3,5];
+const S={sound:true,vib:true,speed:2,weather:2,lives:1,groups:{}};
+GROUPS.forEach(g=>S.groups[g.k]=true);
+try{
+  const o=JSON.parse(localStorage.getItem('kuralSet')||'null');
+  if(o){
+    S.sound=o.sound!==false;S.vib=o.vib!==false;
+    const cl=(v,n,d)=>Number.isInteger(v)&&v>=0&&v<n?v:d;
+    S.speed=cl(o.speed,SPEEDS.length,2);S.weather=cl(o.weather,WEATHERS.length,2);S.lives=cl(o.lives,LIVES.length,1);
+    if(o.groups)GROUPS.forEach(g=>{if(o.groups[g.k]===false)S.groups[g.k]=false});
+    if(!GROUPS.some(g=>S.groups[g.k]))GROUPS.forEach(g=>S.groups[g.k]=true);
+  }
+}catch(e){}
+sound=S.sound;
+function saveS(){try{localStorage.setItem('kuralSet',JSON.stringify(S))}catch(e){}}
+function applyEnabled(){ENABLED=new Set();GROUPS.forEach(g=>{if(S.groups[g.k])g.types.forEach(t=>ENABLED.add(t))})}
+function customMode(){return {name:'ÖZEL',speed:SPEEDS[S.speed].v,pw:WEATHERS[S.weather].pw,noWeather:S.weather===0,lives:LIVES[S.lives]}}
 const FW=(()=>{try{const v=new URLSearchParams(location.search).get('dunya');return v==null?null:Math.max(0,Math.min(4,+v||0))}catch(e){return null}})();
 const WORLDS=[
  {name:'GECE',ic:'🌙',sky:['#0a0620','#3a1670'],road:['#2d1a6e','#1a0f45'],ground:['#1a0f45','#080418'],edge:'#78c8ff',rain:0,snow:0,fog:0,vis:0,ice:0,drops:0,storm:0,tip:''},
@@ -188,17 +271,17 @@ function tone(f,d,type='sine',v=.12,to=null,delay=0){
     o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);
     g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02);}catch(e){}
 }
-const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const buzz=ms=>{if(!S.vib)return;try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 
 function reset(){
-  rows=[];lane=1;px=1;lives=3;score=0;streak=0;bestStreak=0;rowsSpawned=0;rowsDone=0;rowsOk=0;
+  rows=[];lane=1;px=1;lives=mode.lives;maxLives=mode.lives;score=0;streak=0;bestStreak=0;rowsSpawned=0;rowsDone=0;rowsOk=0;
   rule=null;periodLeft=0;prevType=null;time=0;shake=0;flash=0;parts=[];popups=[];lastBannerRule=null;
   pending=null;tempo=1;tempoT=1;graceUntil=0;curWorld=null;th=themeOf(WORLDS[FW||0]);lockUntil=0;blankUntil=0;boltIn=3;bolt=null;lightFlash=0;initWeather();document.getElementById('wx').textContent='';
   document.getElementById('bt').textContent='HAZIR OL';document.getElementById('bs').innerHTML='&nbsp;';
   hud();
 }
 function hud(){
-  document.getElementById('hearts').textContent='❤'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,3-lives));
+  document.getElementById('hearts').textContent='❤'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,maxLives-lives));
   document.getElementById('score').textContent=score;
   document.getElementById('streak').textContent=streak>=3?'🔥 '+streak+(streak>=5?' x'+(1+Math.floor(streak/5)):''):'';
 }
@@ -210,7 +293,7 @@ function spawnRow(z0){
   periodLeft--;
   let r;do{r=makeRow(rule,rowsSpawned)}while(!r.ok);
   const dr=r.items.map(()=>Array.from({length:7},()=>({x:Math.random()*.9-.45,y:Math.random()*.8-.4,r:.04+Math.random()*.08})).concat([{x:Math.random()*.6-.3,y:Math.random()*.5-.25,r:.2+Math.random()*.08,smear:true}]));
-  rows.push({z:z0||0,rule,world:FW!=null?FW:worldFor(rowsSpawned),dr,items:r.items,correct:r.correct,status:null,chosen:-1,t0:0});
+  rows.push({z:z0||0,rule,world:FW!=null?FW:(mode.noWeather?0:worldFor(rowsSpawned)),dr,items:r.items,correct:r.correct,status:null,chosen:-1,t0:0});
   rowsSpawned++;
 }
 function setBanner(r){
@@ -268,7 +351,7 @@ function update(dt){
         tone(440*Math.pow(2,Math.min(streak,12)/12),.18,'sine',.15);tone(660*Math.pow(2,Math.min(streak,12)/12),.22,'triangle',.08,null,.05);
         burst(x,PL,'#7dffb0',14);popup('+'+pts,x,PL-50,28+Math.min(16,streak),'#fff','#7dffb0',700,70);
         if(streak%5===0){flash=.3;flashCol='#ffd36b';popup('SERİ '+streak+'!',W/2,H*.45,46,'#fff','#ffb347',1000,40,-.06);buzz(60)}
-        if(streak%10===0&&lives<3){lives++;popup('+❤',W/2,H*.35,40,'#fff','#ff6b8a',900,40)}
+        if(streak%10===0&&lives<maxLives){lives++;popup('+❤',W/2,H*.35,40,'#fff','#ff6b8a',900,40)}
       }else{
         lives--;streak=0;shake=22;flash=.4;flashCol='#ff2d55';tone(130,.35,'sawtooth',.14,50);buzz(180);
         burst(x,PL,'#ff4d6d',18);popup('✗',x,PL-50,44,'#fff','#ff4d6d',700,60);
@@ -280,6 +363,7 @@ function update(dt){
   rows=rows.filter(r=>r.z<1.35);
 }
 function showOver(){
+  document.getElementById('pauseBtn').style.display='none';
   const acc=rowsDone?Math.round(rowsOk/rowsDone*100):0;
   document.getElementById('overTxt').innerHTML='Puan: <b>'+score+'</b><br>Geçilen kapı: '+rowsDone+' · Doğru: %'+acc+'<br>En uzun seri: '+bestStreak;
   document.getElementById('over').style.display='flex';
@@ -448,15 +532,85 @@ addEventListener('pointerup',e=>{
   if(tracking&&!moved&&Math.abs(e.clientX-sx)<12&&Math.abs(e.clientY-sy)<12&&state==='play'&&!e.target.closest('button')){move(e.clientX<W/2?-1:1)}
   tracking=false;
 });
-addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')move(-1);if(e.key==='ArrowRight'||e.key==='d')move(1)});
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a')move(-1);
+  if(e.key==='ArrowRight'||e.key==='d')move(1);
+  if(e.key==='Escape'||e.key==='p'){if(state==='play')pauseGame();else if(state==='pause'&&document.getElementById('pause').style.display==='flex')resumeGame()}
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')pauseGame()});
+const $=id=>document.getElementById(id);
+function hideAll(){['splash','start','over','pause','settings'].forEach(id=>$(id).style.display='none')}
+let cdTok=0;
 function begin(m){
-  mode=MODES[m];document.getElementById('start').style.display='none';document.getElementById('over').style.display='none';
-  reset();state='play';tone(400,.2,'triangle',.1,800);spawnRow(.25);
+  lastMode=m;mode=m===3?customMode():MODES[m];applyEnabled();
+  hideAll();reset();state='count';$('pauseBtn').style.display='none';
+  const tok=++cdTok,steps=['3','2','1','BAŞLA!'],el=$('count');let i=0;
+  const next=()=>{
+    if(tok!==cdTok)return;
+    if(i>=steps.length){el.style.display='none';state='play';spawnRow(.25);$('pauseBtn').style.display='block';return}
+    el.textContent=steps[i];el.style.display='flex';el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+    if(i<3)tone(440,.16,'triangle',.12);else{tone(660,.12,'triangle',.12);tone(990,.3,'triangle',.12,null,.1);buzz(40)}
+    i++;setTimeout(next,i<=3?650:560);
+  };
+  next();
 }
-document.querySelectorAll('#start button').forEach(b=>b.onclick=()=>begin(+b.dataset.m));
-document.getElementById('again').onclick=()=>{document.getElementById('over').style.display='none';document.getElementById('start').style.display='flex';state='menu'};
-const sndBtn=document.getElementById('snd');sndBtn.textContent=sound?'🔊':'🔇';
-sndBtn.onclick=()=>{sound=!sound;sndBtn.textContent=sound?'🔊':'🔇';try{localStorage.setItem('kuralSnd',sound?'1':'0')}catch(e){}};
+function toMenu(){cdTok++;$('count').style.display='none';hideAll();state='menu';reset();$('pauseBtn').style.display='none';$('start').style.display='flex'}
+function pauseGame(){if(state!=='play')return;state='pause';hideAll();$('pause').style.display='flex';$('pauseBtn').style.display='none';resetQuit()}
+function resumeGame(){hideAll();state='play';graceUntil=time+1.3;$('pauseBtn').style.display='block'}
+let quitArmed=0;
+function resetQuit(){quitArmed=0;$('quit').textContent='OYUNDAN ÇIK'}
+$('quit').onclick=()=>{
+  if(!quitArmed){quitArmed=1;$('quit').textContent='EMİN MİSİN? TEKRAR DOKUN';setTimeout(resetQuit,2500);return}
+  resetQuit();toMenu();
+};
+function openSettings(from){setFrom=from;hideAll();renderSettings();$('settings').style.display='flex'}
+function closeSettings(){hideAll();$(setFrom).style.display='flex'}
+function renderSettings(){
+  const root=$('settings'),st=root.scrollTop,b=$('setBody');b.innerHTML='';
+  const hd=t=>{const d=document.createElement('div');d.className='hd';d.textContent=t;b.appendChild(d)};
+  const note=t=>{const d=document.createElement('div');d.className='note';d.textContent=t;b.appendChild(d)};
+  const sw=(label,get,set)=>{
+    const r=document.createElement('div');r.className='row';
+    const sp=document.createElement('span');sp.textContent=label;r.appendChild(sp);
+    const bt=document.createElement('button');bt.className='sw'+(get()?' on':'');
+    bt.onclick=()=>{set(!get());saveS();renderSettings()};r.appendChild(bt);b.appendChild(r);
+  };
+  const seg=(label,opts,get,set)=>{
+    const r=document.createElement('div');r.className='row col';
+    const sp=document.createElement('span');sp.textContent=label;r.appendChild(sp);
+    const sg=document.createElement('div');sg.className='seg';
+    opts.forEach((o,i)=>{const bt=document.createElement('button');bt.textContent=o;bt.className=i===get()?'on':'';
+      bt.onclick=()=>{set(i);saveS();renderSettings()};sg.appendChild(bt)});
+    r.appendChild(sg);b.appendChild(r);
+  };
+  hd('GENEL');
+  sw('Ses',()=>S.sound,v=>{S.sound=v;sound=v;if(v)tone(520,.12,'sine',.1,780)});
+  sw('Titreşim',()=>S.vib,v=>{S.vib=v;if(v)buzz(40)});
+  hd('KURAL TÜRLERİ  (tüm modlarda geçerli)');
+  GROUPS.forEach(g=>sw(g.label,()=>S.groups[g.k],v=>{
+    if(!v&&GROUPS.filter(x=>S.groups[x.k]).length<=1)return;   // en az bir tür açık kalsın
+    S.groups[g.k]=v;
+  }));
+  note('En az bir kural türü açık kalmak zorunda. Boya–kelime ve işlem en zor olanlardır; kapatırsan oyun daha rahat olur.');
+  hd('ÖZEL MOD  (sadece ÖZEL düğmesinde geçerli)');
+  seg('Hız',SPEEDS.map(x=>x.l),()=>S.speed,v=>S.speed=v);
+  seg('Hava durumu (yağmur, kar, sis, fırtına)',WEATHERS.map(x=>x.l),()=>S.weather,v=>S.weather=v);
+  seg('Can sayısı',LIVES.map(String),()=>S.lives,v=>S.lives=v);
+  root.scrollTop=st;
+}
+document.querySelectorAll('#start button[data-m]').forEach(b=>b.onclick=()=>begin(+b.dataset.m));
+$('splash').onclick=()=>{
+  if($('splash').style.display==='none')return;
+  tone(523,.15,'triangle',.1);tone(784,.25,'triangle',.1,null,.1);
+  hideAll();$('start').style.display='flex';
+};
+$('openSet').onclick=()=>openSettings('start');
+$('pSet').onclick=()=>openSettings('pause');
+$('setBack').onclick=closeSettings;
+$('pauseBtn').onclick=pauseGame;
+$('resume').onclick=resumeGame;
+$('again').onclick=()=>begin(lastMode);
+$('toMenu').onclick=toMenu;
 layout();reset();requestAnimationFrame(loop);
 </script>
 </body>
